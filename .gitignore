@@ -1,0 +1,70 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bin/
+obj/
+out/
+publish/
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+**/packages.config
+
+# Rider
+.idea/
+*.sln.iml
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+*.pidb
+*.userprefs
+
+# Visual Studio Code
+.vscode/
+.history/
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Other
+*.db
+*.pdb
+*.mdb
+*.scc
+*.ilk
+*.idb
+*.ipch
+*.aps
+*.pch
+*.obj
+*.exe
+*.dll
+*.lib
+*.appxrecipe
+*.appxmanifest
+*.pri
+*.runtimeconfig.json
+*.deps.json
