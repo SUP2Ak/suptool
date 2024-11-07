@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ClearTool-WinUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "ClearTool-WinUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
