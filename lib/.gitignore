@@ -1,0 +1,36 @@
+# Fichiers de bibliothèque
+*.dll
+*.pdb
+*.lib
+*.so
+*.a
+*.dylib
+
+# Dossiers de build
+build/
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+out/
+publish/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.log
+
+# Fichiers de configuration
+*.config
+*.user
+*.suo
+*.sln.docstates
+
+# Autres fichiers générés
+*.cache
+*.vs/
+*.vscode/
+*.idea/
+*.DS_Store
