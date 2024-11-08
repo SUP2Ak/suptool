@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="WelcomeText" xml:space="preserve">
+    <value>Bienvenue dans l'application !</value>
+  </data>
+  <data name="HomeText" xml:space="preserve"> <!-- @as Home -->
+    <value>Accueil</value>
+  </data>
+  <data name="SettingsText" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+</root>
