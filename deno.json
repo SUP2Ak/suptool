@@ -1,0 +1,7 @@
+{
+  "tasks": {
+    "start": "deno task tauri dev",
+    "test": "deno task tauri test",
+    "setup": "deno task tauri build --target x86_64-pc-windows-msvc"
+  }
+}
