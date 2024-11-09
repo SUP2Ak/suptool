@@ -4,14 +4,6 @@ import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import FileSearch from "./components/FileSearch";
 
-import { once } from '@tauri-apps/api/event';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-
-once('ready', (event) => {});
-
-const appWebview = getCurrentWebviewWindow();
-appWebview.once('ready', () => {});
-
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
