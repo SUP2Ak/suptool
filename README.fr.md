@@ -15,16 +15,8 @@ Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
 - [pnpm](https://pnpm.io/installation) pour la gestion des paquets
 - [Deno v2](https://deno.land/manual/getting_started/installation) pour exécuter
   des scripts
-- [Tauri CLI v2](https://tauri.app/v1/guides/getting-started/installation/) pour
+- [Tauri CLI v2](https://v2.tauri.app/) pour
   construire et exécuter l'application
-
-### Installation de Rust et Cargo
-
-Pour installer Rust & Cargo, exécutez la commande suivante :
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
 
 ## Installation
 

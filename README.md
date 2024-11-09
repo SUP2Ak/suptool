@@ -1,6 +1,9 @@
-# Suptool
+# suptool
 
-[:gb:]() | [:fr:](./README.fr.md)
+![GitHub Rust](https://github.com/sup2ak/suptool/actions/workflows/rust.yml/badge.svg)
+![GitHub Deno](https://github.com/sup2ak/suptool/actions/workflows/deno.yml/badge.svg)
+
+__Documentation:__ [:gb:](./README.md) | [:fr:](./README.fr.md)
 
 ## Description
 
@@ -17,16 +20,8 @@ Before you begin, ensure you have the following installed:
 - [pnpm](https://pnpm.io/installation) for package management
 - [Deno v2](https://deno.land/manual/getting_started/installation) to run
   scripts
-- [Tauri CLI v2](https://tauri.app/v1/guides/getting-started/installation/) to
+- [Tauri CLI v2](https://v2.tauri.app/) to
   build and run the application
-
-### Installing Rust and Cargo
-
-To install Rust & Cargo, run the following command:
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
 
 ## Installation
 
