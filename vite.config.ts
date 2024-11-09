@@ -1,13 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// @ts-expect-error process is a nodejs global
-// eslint-disable-next-line no-process-globals
+// @ts-ignore
+import process from "node:process";
+
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 // eslint-disable-next-line require-await
-export default defineConfig(async () => ({
+export default defineConfig({
   plugins: [react()],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
@@ -31,4 +32,4 @@ export default defineConfig(async () => ({
       ignored: ["**/src-tauri/**"],
     },
   },
-}));
+});
