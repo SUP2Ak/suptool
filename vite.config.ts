@@ -2,9 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 // @ts-expect-error process is a nodejs global
+// eslint-disable-next-line no-process-globals
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
+// eslint-disable-next-line require-await
 export default defineConfig(async () => ({
   plugins: [react()],
 
