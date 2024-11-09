@@ -6,8 +6,7 @@ import process from "node:process";
 
 const host = process.env.TAURI_DEV_HOST;
 
-async function asyncFunction() {
-  await asyncFunction();
+function asyncFunction() {
   return {
     plugins: [react()],
 
