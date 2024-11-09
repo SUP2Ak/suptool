@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from '@tauri-apps/api/event';
+import { listen } from "@tauri-apps/api/event";
 
 interface IndexingStatus {
   total_files: number;
@@ -17,50 +17,61 @@ interface FileDetails {
 }
 
 export default function FileSearch() {
-  const [keyword, setKeyword] = useState('');
+  const [keyword, setKeyword] = useState("");
   const [isIndexing, setIsIndexing] = useState(true);
-  const [indexingStatus, setIndexingStatus] = useState<IndexingStatus | null>(null);
+  const [indexingStatus, setIndexingStatus] = useState<IndexingStatus | null>(
+    null,
+  );
   const [allFiles, setAllFiles] = useState<FileDetails[]>([]);
   const [displayedResults, setDisplayedResults] = useState<FileDetails[]>([]);
 
   useEffect(() => {
     // Vérifier d'abord si l'indexation est déjà terminée
-    invoke<boolean>('is_indexing_complete')
-      .then(isComplete => {
+    invoke<boolean>("is_indexing_complete")
+      .then((isComplete) => {
         if (isComplete) {
           setIsIndexing(false);
           // Charger directement les fichiers si l'indexation est déjà terminée
-          return invoke<FileDetails[]>('get_all_index_entry')
-            .then(files => {
-              console.log('Fichiers déjà indexés récupérés:', files.length);
+          return invoke<FileDetails[]>("get_all_index_entry")
+            .then((files) => {
+              console.log("Fichiers déjà indexés récupérés:", files.length);
               setAllFiles(files);
-              console.log("Fichiers récupérés avec succès", JSON.stringify(files));
+              console.log(
+                "Fichiers récupérés avec succès",
+                JSON.stringify(files),
+              );
             });
         }
       })
-      .catch(err => console.error('Erreur lors de la vérification de l\'indexation:', err));
+      .catch((err) =>
+        console.error("Erreur lors de la vérification de l'indexation:", err)
+      );
 
     // Configuration de l'écouteur d'événements pour les nouvelles indexations
-    const unsubscribe = listen<IndexingStatus>('indexing-status', (event) => {
+    const unsubscribe = listen<IndexingStatus>("indexing-status", (event) => {
       console.log("Statut d'indexation reçu:", event.payload);
       setIndexingStatus(event.payload);
       setIsIndexing(!event.payload.is_complete);
 
       if (event.payload.is_complete) {
-        invoke<FileDetails[]>('get_all_index_entry')
-          .then(files => {
+        invoke<FileDetails[]>("get_all_index_entry")
+          .then((files) => {
             setAllFiles(files);
-            console.log("Fichiers récupérés avec succès", JSON.stringify(files));
+            console.log(
+              "Fichiers récupérés avec succès",
+              JSON.stringify(files),
+            );
           })
-          .catch(err => console.error('Erreur lors de la récupération des fichiers:', err));
+          .catch((err) =>
+            console.error("Erreur lors de la récupération des fichiers:", err)
+          );
       }
     });
 
     return () => {
-      unsubscribe.then(fn => fn());
+      unsubscribe.then((fn) => fn());
     };
   }, []);
-
 
   // Filtrage des résultats (inchangé)
   useEffect(() => {
@@ -72,7 +83,7 @@ export default function FileSearch() {
 
       const searchTerm = keyword.toLowerCase();
       const filtered = allFiles
-        .filter(file => file.path.toLowerCase().includes(searchTerm))
+        .filter((file) => file.path.toLowerCase().includes(searchTerm))
         .slice(0, 1000);
 
       setDisplayedResults(filtered);
@@ -104,16 +115,19 @@ export default function FileSearch() {
         <div className="mt-4">
           <h2 className="text-xl mb-2">
             Résultats ({displayedResults.length})
-            {displayedResults.length === 1000 && ' (Limité aux 1000 premiers résultats)'}
+            {displayedResults.length === 1000 &&
+              " (Limité aux 1000 premiers résultats)"}
           </h2>
           <div className="space-y-2">
             {displayedResults.map((file, index) => (
               <div key={index} className="p-3 border rounded hover:bg-gray-50">
                 <div className="font-medium truncate">{file.path}</div>
                 <div className="text-sm text-gray-600 flex gap-4 mt-1">
-                  <span>Extension: {file.extension || 'Aucune'}</span>
+                  <span>Extension: {file.extension || "Aucune"}</span>
                   <span>Taille: {formatFileSize(file.size)}</span>
-                  <span>Modifié: {new Date(file.last_modified).toLocaleString()}</span>
+                  <span>
+                    Modifié: {new Date(file.last_modified).toLocaleString()}
+                  </span>
                 </div>
               </div>
             ))}
@@ -127,6 +141,8 @@ export default function FileSearch() {
 function formatFileSize(size: number): string {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
-  if (size < 1024 * 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  if (size < 1024 * 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  }
   return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }

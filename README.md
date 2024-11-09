@@ -4,7 +4,9 @@
 
 ## Description
 
-Suptool is a desktop application developed with Tauri, React, and TypeScript. It allows you to search and index files on your system, providing a modern and responsive user interface.
+Suptool is a desktop application developed with Tauri, React, and TypeScript. It
+allows you to search and index files on your system, providing a modern and
+responsive user interface.
 
 ## Prerequisites
 
@@ -13,8 +15,10 @@ Before you begin, ensure you have the following installed:
 - [Rust](https://www.rust-lang.org/tools/install) (stable version)
 - [Node.js](https://nodejs.org/) (version 18 or higher)
 - [pnpm](https://pnpm.io/installation) for package management
-- [Deno v2](https://deno.land/manual/getting_started/installation) to run scripts
-- [Tauri CLI v2](https://tauri.app/v1/guides/getting-started/installation/) to build and run the application
+- [Deno v2](https://deno.land/manual/getting_started/installation) to run
+  scripts
+- [Tauri CLI v2](https://tauri.app/v1/guides/getting-started/installation/) to
+  build and run the application
 
 ### Installing Rust and Cargo
 
@@ -75,12 +79,15 @@ Once the application is launched, you can:
 
 ## Contributing
 
-Contributions are welcome! If you would like to contribute, please follow these steps:
+Contributions are welcome! If you would like to contribute, please follow these
+steps:
 
 ## License
 
-This project is licensed under the MIT License. For more details, please refer to the [LICENSE](LICENSE) file.
+This project is licensed under the MIT License. For more details, please refer
+to the [LICENSE](LICENSE) file.
 
 ## Help
 
-For any questions or issues, feel free to open an issue on the GitHub repository.
+For any questions or issues, feel free to open an issue on the GitHub
+repository.
