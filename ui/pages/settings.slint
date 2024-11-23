@@ -1,0 +1,39 @@
+import { GroupBox, CheckBox, ProgressIndicator } from "std-widgets.slint";
+import { TitleBar } from "../widgets/common.slint";
+
+export component SettingsPage inherits Rectangle {
+    callback option1-changed(bool, int);
+    callback option2-changed(bool, int);
+    
+    background: #3b3737;
+    in-out property <bool> option1: false;
+    in-out property <bool> option2: false;
+    
+    VerticalLayout {
+        TitleBar {
+            self-text: "Settings";
+        }
+        
+        GroupBox {
+            title: "Options";
+            VerticalLayout {
+                CheckBox { 
+                    text: "Option 1";
+                    checked: root.option1;
+                    toggled => {
+                        root.option1 = self.checked;
+                        root.option1-changed(self.checked, 1);
+                    }
+                }
+                CheckBox { 
+                    text: "Option 2";
+                    checked: root.option2;
+                    toggled => {
+                        root.option2 = self.checked;
+                        root.option2-changed(self.checked, 2);
+                    }
+                }
+            }
+        }
+    }
+}

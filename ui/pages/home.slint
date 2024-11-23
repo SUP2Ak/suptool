@@ -1,0 +1,22 @@
+import { Button } from "std-widgets.slint";
+import { TitleBar } from "../widgets/common.slint";
+export component HomePage inherits Rectangle {
+    background: #3b3737;
+    
+    VerticalLayout {
+        TitleBar {
+            self-text: "Home";
+        }
+        
+        Button {
+            text: "Cliquez-moi!";
+            clicked => {
+                debug("Bouton cliqué!");
+            }
+        }
+    }
+}
+
+export global HomeLogic {
+    callback home-button-clicked();
+}

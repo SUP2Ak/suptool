@@ -1,0 +1,17 @@
+
+
+export component TitleBar inherits Rectangle {
+    in-out property <string> self-text;
+
+    height: 24px;
+    background: #242121;
+    Rectangle {
+        width: parent.width;
+
+        Text {
+            text: root.self-text;
+            font-size: 12px;
+            horizontal-alignment: center;
+        }
+    }
+}

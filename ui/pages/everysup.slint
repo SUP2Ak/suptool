@@ -1,0 +1,37 @@
+import { LineEdit, StandardTableView } from "std-widgets.slint";
+import { TitleBar } from "../widgets/common.slint";
+
+export component EverysupPage inherits Rectangle {
+    background: #3b3737;
+    in-out property <string> name-of-folder-or-file;
+    in-out property <[[StandardListViewItem]]> files: [];
+    callback everysup-changed(string);
+    
+    VerticalLayout {
+        TitleBar {
+            self-text: "EverySup";
+        }
+
+        LineEdit {
+            placeholder-text: "Write name of folder or file";
+            height: 30px;
+            edited => {
+                root.name-of-folder-or-file = self.text;
+                root.everysup-changed(root.name-of-folder-or-file);
+            }
+        }
+
+        StandardTableView {
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+            columns: [
+                { title: "Name", width: root.width * 0.3 },
+                { title: "Path", width: root.width * 0.4 },
+                { title: "Size", width: root.width * 0.1 },
+                { title: "Type", width: root.width * 0.1 },
+                { title: "Modified", width: root.width * 0.1 }
+            ];
+            rows: root.files;
+        }
+    }
+}

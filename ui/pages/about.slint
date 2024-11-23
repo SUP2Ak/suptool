@@ -1,0 +1,16 @@
+import { TitleBar } from "../widgets/common.slint";
+
+export component AboutPage inherits Rectangle {
+    background: #3b3737;
+    
+    VerticalLayout {
+        TitleBar {
+            self-text: "À propos";
+        }
+    
+        Text {
+            text: "Version 1.0.0";
+            horizontal-alignment: center;
+        }
+    }
+}

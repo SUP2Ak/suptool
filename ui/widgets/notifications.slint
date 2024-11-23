@@ -1,0 +1,116 @@
+export struct NotificationData {
+    id: string,
+    title: string,
+    message: string,
+    notification-type: string,
+    timestamp: int,
+}
+
+export global NotificationHandler {
+    callback show-notification(NotificationData);
+    callback hide-notification(string);
+}
+
+export component NotificationPopup inherits Rectangle {
+    in property <bool> notification-visible;
+    in property <NotificationData> notification-data;
+    in property <length> stack-width;
+    in property <int> index;
+    
+    width: 300px;
+    height: 80px;
+    
+    x: stack-width;
+    opacity: 0;
+    y: index * 90px;
+    
+    states [
+        shown when notification-visible : {
+            x: 0px;
+            opacity: 1;
+            in {
+                animate x { duration: 300ms; easing: ease-out; }
+                animate opacity { duration: 250ms; easing: ease-out; }
+            }
+            out {
+                animate x { duration: 300ms; easing: ease-in; }
+                animate opacity { duration: 250ms; easing: ease-in; }
+            }
+        }
+    ]
+    
+    background: notification-data.notification-type == "error" ? #ff5252
+              : notification-data.notification-type == "success" ? #4caf50
+              : notification-data.notification-type == "warning" ? #fb8c00
+              : #2196f3;
+    border-radius: 4px;
+    drop-shadow-color: #00000040;
+    drop-shadow-offset-y: 2px;
+    drop-shadow-blur: 4px;
+    
+    VerticalLayout {
+        padding: 12px;
+        spacing: 4px;
+        
+        HorizontalLayout {
+            spacing: 8px;
+            
+            Text {
+                text: notification-data.title;
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+                horizontal-stretch: 1;
+            }
+            
+            TouchArea {
+                width: 24px;
+                height: 24px;
+                Rectangle {
+                    Text {
+                        text: "×";
+                        color: white;
+                        font-size: 18px;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+                clicked => {
+                    NotificationHandler.hide-notification(notification-data.id);
+                }
+            }
+        }
+        
+        Text {
+            text: notification-data.message;
+            color: white;
+            font-size: 14px;
+            wrap: word-wrap;
+        }
+    }
+}
+
+export component NotificationStack inherits Rectangle {
+    in property <[NotificationData]> notifications;
+    in property <int> max-visible-notifications: 3;
+    in property <length> window-width;
+    in property <length> window-height;
+    
+    width: 300px;
+    height: notifications.length * 90px;
+    x: window-width - self.width - 20px;
+    y: window-height - self.height - 20px;
+    
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        
+        for notification[i] in notifications : NotificationPopup {
+            notification-data: notification;
+            notification-visible: i < root.max-visible-notifications;
+            stack-width: root.width;
+            index: i;
+        }
+    }
+}

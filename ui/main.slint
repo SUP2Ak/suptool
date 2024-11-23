@@ -1,0 +1,175 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+import { HomePage } from "./pages/home.slint";
+import { SettingsPage } from "./pages/settings.slint";
+import { AboutPage } from "./pages/about.slint";
+import { EverysupPage } from "./pages/everysup.slint";
+import { NotificationStack, NotificationHandler, NotificationData } from "./widgets/notifications.slint";
+
+export global MainWindowLogic {
+    callback settings-changed(string, int);
+    callback everysup-changed(string);
+    callback invoke_search_ready();
+}
+
+export struct FileData {
+    name: string,
+    path: string,
+    size: string,
+    modified: string,
+}
+
+component NavButton inherits Rectangle {
+    callback clicked();
+    in property <string> text;
+    in property <bool> selected;
+    in property <image> icon;
+    in property <bool> drawer-expanded;
+
+    height: 40px;
+    background: selected ? #2b2a2a : transparent;
+
+    HorizontalLayout {
+        padding: 10px;
+        spacing: 8px;
+        alignment: center;
+        
+        Image {
+            width: 24px;
+            height: 24px;
+            source: root.icon;
+            colorize: selected ? #f39f21 : black;
+            vertical-alignment: center;
+            horizontal-alignment: left;
+        }
+        
+        Text {
+            visible: root.drawer-expanded;
+            text: root.text;
+            color: selected ? #f39f21 : black;
+            font-weight: selected ? 700 : 400;
+            vertical-alignment: bottom;
+            horizontal-alignment: left;
+            min-width: root.drawer-expanded ? 120px : 0px;
+        }
+    }
+
+    TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+export component MainWindow inherits Window {
+    resize-border-width: 10px;
+    min-width: 800px;
+    min-height: 600px;
+    title: "suptool - v1.0.0";
+    icon: @image-url("icons/supv.png");
+
+    in-out property <image> window-icon;
+    in-out property <bool> drawer-expanded: true;
+    in-out property <string> current-page: "home";
+
+    // NotificationStack
+    in-out property <[NotificationData]> notifications: [];
+
+    in-out property <[[StandardListViewItem]]> everysup-files: [];
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+
+        HorizontalLayout {
+            Rectangle {
+                // Drawer
+                width: root.drawer-expanded ? 200px : 60px;
+                background: #242121;
+                animate width { duration: 250ms; easing: ease-in-out; }
+
+                VerticalLayout {
+                    padding: 8px;
+                    spacing: 4px;
+
+                    // Top section
+                    VerticalLayout {
+                        // Burger menu button
+                        Button {
+                            //text: root.drawer-expanded ? "X" : @image-url("icons/burger.svg");
+                            icon: root.drawer-expanded ? @image-url("icons/close.svg") : @image-url("icons/burger.svg");
+                            clicked => { root.drawer-expanded = !root.drawer-expanded; }
+                        }
+
+                        NavButton {
+                            text: "Accueil";
+                            icon: @image-url("icons/home.svg");
+                            selected: root.current-page == "home";
+                            drawer-expanded: root.drawer-expanded;
+                            clicked => { root.current-page = "home"; }
+                        }
+
+                        NavButton {
+                            text: "EverySup";
+                            icon: @image-url("icons/searchfolder.svg");
+                            selected: root.current-page == "everysup";
+                            drawer-expanded: root.drawer-expanded;
+                            clicked => { root.current-page = "everysup"; }
+                        }
+
+                        // Add Elements
+                    }
+
+                    // Space for elements
+                    Rectangle {
+                        height: parent.height - 220px;  // Add 20px for each button added
+                    }
+
+                    // Bottom section
+                    VerticalLayout {
+                        NavButton {
+                            text: "À propos";
+                            icon: @image-url("icons/info.svg");
+                            selected: root.current-page == "about";
+                            drawer-expanded: root.drawer-expanded;
+                            clicked => { root.current-page = "about"; }
+                        }
+
+                        NavButton {
+                            text: "Paramètres";
+                            icon: @image-url("icons/settings.svg");
+                            selected: root.current-page == "settings";
+                            drawer-expanded: root.drawer-expanded;
+                            clicked => { root.current-page = "settings"; }
+                        }
+                    }
+                }
+            }
+
+            // Main content
+            Rectangle {
+                if root.current-page == "home" : HomePage {}
+                if root.current-page == "settings" : SettingsPage {
+                    option1-changed(value) => {
+                        MainWindowLogic.settings-changed("Option 1 : " + (value ? "activé" : "désactivé"), 1);
+                    }
+                    option2-changed(value) => {
+                        MainWindowLogic.settings-changed("Option 2 : " + (value ? "activé" : "désactivé"), 2);
+                    }
+                }
+                if root.current-page == "about" : AboutPage {}
+                if root.current-page == "everysup" : EverysupPage {
+                    files: root.everysup-files;
+                    everysup-changed(value) => {
+                        MainWindowLogic.everysup-changed(value);
+                    }
+                }
+            }
+        }
+
+        // Notification stack outside the main layout
+        NotificationStack {
+            notifications: root.notifications;
+            max-visible-notifications: 3;
+            window-width: root.width;
+            window-height: root.height;
+        }
+    }
+}
