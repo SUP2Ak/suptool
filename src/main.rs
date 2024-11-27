@@ -6,6 +6,7 @@ mod pages;
 mod widgets;
 mod slint_generated;
 mod everything;
+mod updater;
 
 fn main() {
     #[cfg(debug_assertions)]
