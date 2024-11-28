@@ -1,0 +1,60 @@
+export enum TooltipPosition {
+    left,
+    right,
+    top,
+    bottom
+}
+
+export component PopHover {
+    in property <string> text;
+    in property <bool> force-show: false;
+    in property <TooltipPosition> position: TooltipPosition.left;
+    in property <length> offset: 8px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: transparent;
+
+        states [
+            visible when hover.has-hover || force-show : {
+                tooltip.opacity: 1;
+            }
+            hidden when !hover.has-hover && !force-show : {
+                tooltip.opacity: 0;
+            }
+        ]
+
+        hover := TouchArea {
+            width: parent.width;
+            height: parent.height;
+            @children
+        }
+
+        tooltip := Rectangle {
+            background: #3b3737;
+            border-radius: 4px;
+            opacity: 0;
+
+            txt := Text {
+                padding-left: 12px;
+                padding-right: 12px;
+                padding-top: 6px;
+                padding-bottom: 6px;
+                color: #f39f21;
+                text: root.text;
+            }
+
+            width: txt.preferred-width + txt.padding-left + txt.padding-right;
+            height: txt.preferred-height + txt.padding-top + txt.padding-bottom;
+
+            x: position == TooltipPosition.left ? -self.width - offset :
+               position == TooltipPosition.right ? parent.width + offset :
+               (parent.width - self.width) / 2;
+
+            y: position == TooltipPosition.top ? -self.height - offset :
+               position == TooltipPosition.bottom ? parent.height + offset :
+               (parent.height - self.height) / 2;
+        }
+    }
+}
