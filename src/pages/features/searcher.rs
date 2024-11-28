@@ -2,19 +2,19 @@ use std::sync::Arc;
 use parking_lot::RwLock;
 use crate::everything::{EverythingIndex, search::{SearchEngine, SearchResult}};
 use crate::everything::index::block::SearchBlock;
-use crate::pages::everysup::MAX_DISPLAY_RESULTS;
+// use crate::pages::everysup::MAX_DISPLAY_RESULTS;
 use std::path::Path;
 use std::io;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 use crate::everything::index::entry::FileEntry;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::mpsc::{channel, Sender};
+// use std::sync::mpsc::{channel, Sender};
 use std::thread;
-use std::cmp::Ordering as CmpOrdering;
+// use std::cmp::Ordering as CmpOrdering;
 use crossbeam::channel::bounded;
-use num_cpus;
-use std::time::SystemTime;
+// use num_cpus;
+// use std::time::SystemTime;
 
 #[derive(Clone)]
 pub struct FileSearcher {
@@ -61,7 +61,7 @@ impl FileSearcher {
             move || {
                 let mut current_block = SearchBlock::new();
                 while let Ok((entry, path)) = rx.recv() {
-                    let name = path.file_name()
+                    let _ = path.file_name()
                         .map(|n| n.to_string_lossy().into_owned())
                         .unwrap_or_default();
                         
