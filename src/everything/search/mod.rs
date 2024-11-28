@@ -2,21 +2,21 @@ mod query;
 mod scorer;
 
 use std::time::SystemTime;
-use std::path::PathBuf;
-use super::index::entry::FileEntry;
+// use std::path::PathBuf;
+// use super::index::entry::FileEntry;
 use crate::everything::EverythingIndex;
-use super::path::PathTable;
-use parking_lot::RwLock;
-use std::sync::Arc;
-use lru::LruCache;
-use std::num::NonZeroUsize;
+// use super::path::PathTable;
+// use parking_lot::RwLock;
+// use std::sync::Arc;
+// use lru::LruCache;
+// use std::num::NonZeroUsize;
 use crate::pages::everysup::MAX_DISPLAY_RESULTS;
-use crate::everything::index::bitmap::CharBitmap;
-use rayon::prelude::*;
-use std::sync::atomic::{AtomicUsize, Ordering};
+// use crate::everything::index::bitmap::CharBitmap;
+// use rayon::prelude::*;
+// use std::sync::atomic::{AtomicUsize, Ordering};
 
-pub use query::{SearchQuery, SearchFilter};
-use scorer::SearchScorer;
+// pub use query::{SearchQuery, SearchFilter};
+// use scorer::SearchScorer;
 
 #[derive(Clone, Debug)]
 pub struct SearchResult {
@@ -25,17 +25,18 @@ pub struct SearchResult {
     pub size: u64,
     pub is_dir: bool,
     pub modified: SystemTime,
-    pub score: f32,
+    // pub score: f32,
 }
 
 pub struct SearchEngine {
-    scorer: SearchScorer,
+
+    //scorer: SearchScorer,
 }
 
 impl SearchEngine {
     pub fn new() -> Self {
         Self {
-            scorer: SearchScorer::new(),
+            //scorer: SearchScorer::new(),
         }
     }
 
@@ -72,7 +73,7 @@ impl SearchEngine {
                             size: entry.decompress_size(),
                             is_dir: entry.is_dir(),
                             modified: entry.decompress_date(),
-                            score: 1.0
+                            // score: 1.0
                         });
 
                         if results.len() >= MAX_DISPLAY_RESULTS {
