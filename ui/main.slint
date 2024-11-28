@@ -3,6 +3,7 @@ import { HomePage } from "./pages/home.slint";
 import { SettingsPage } from "./pages/settings.slint";
 import { AboutPage } from "./pages/about.slint";
 import { EverysupPage } from "./pages/everysup.slint";
+import { ClearToolPage } from "./pages/cleartool.slint";
 import { NotificationStack, NotificationHandler, NotificationData } from "./widgets/notifications.slint";
 
 export global MainWindowLogic {
@@ -12,6 +13,7 @@ export global MainWindowLogic {
     callback invoke_search_ready();
     callback check-for-updates();
     callback install-update();
+    callback clear-tool-button-clicked();
 }
 
 export struct FileData {
@@ -135,12 +137,20 @@ export component MainWindow inherits Window {
                             clicked => { root.current-page = "everysup"; }
                         }
 
+                        NavButton {
+                            text: "Clear Tool";
+                            icon: @image-url("icons/trash.svg");
+                            selected: root.current-page == "cleartool";
+                            drawer-expanded: root.drawer-expanded;
+                            clicked => { root.current-page = "cleartool"; }
+                        }
+
                         // Add Elements
                     }
 
                     // Space for elements
                     Rectangle {
-                        height: parent.height - 220px;  // Add 20px for each button added
+                        height: parent.height - 260px;  // Add 20px for each button added
                     }
 
                     // Bottom section
@@ -195,6 +205,11 @@ export component MainWindow inherits Window {
                     }
                     start-indexing => {
                         MainWindowLogic.start-indexing();
+                    }
+                }
+                if root.current-page == "cleartool" : ClearToolPage {
+                    clear-tool-button-clicked => {
+                        MainWindowLogic.clear-tool-button-clicked();
                     }
                 }
             }
