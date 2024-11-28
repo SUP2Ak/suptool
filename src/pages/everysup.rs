@@ -1,18 +1,18 @@
-use slint::{ComponentHandle, Weak, Model, VecModel, SharedString, StandardListViewItem};
+use slint::{ComponentHandle, Weak};
 use crate::slint_generated::{MainWindow, MainWindowLogic};
 use crate::pages::features::FileSearcher;
 use std::thread;
 use std::sync::Arc;
 use parking_lot::Mutex;
 use std::time::{Duration, Instant, SystemTime};
-use std::cmp::Ordering;
-use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
-use lru::LruCache;
-use std::num::NonZeroUsize;
-use std::collections::hash_map::RandomState;
-use crate::everything::SearchResult;
+//use std::cmp::Ordering;
+//use std::sync::atomic;
+//use lru::LruCache;
+//use std::num::NonZeroUsize;
+//use std::collections::hash_map::RandomState;
+//use crate::everything::SearchResult;
 use chrono;
-use rayon::prelude::*;
+//use rayon::prelude::*;
 
 fn format_size(size: u64) -> String {
     const KB: u64 = 1024;
@@ -51,7 +51,7 @@ fn init_searcher(window: &Weak<MainWindow>) -> FileSearcher {
 }
 
 pub const MAX_DISPLAY_RESULTS: usize = 100; // Réduire le nombre de résultats affichés
-const DEBOUNCE_DELAY: Duration = Duration::from_millis(50); // Réduire le debounce
+// const DEBOUNCE_DELAY: Duration = Duration::from_millis(50); // Réduire le debounce
 
 
 fn format_time(time: SystemTime) -> String {
@@ -65,6 +65,28 @@ pub fn init(window: &Weak<MainWindow>) {
     let last_query = Arc::new(Mutex::new((String::new(), Instant::now())));
     
     if let Some(window) = window_weak.upgrade() {
+        let searcher_clone = searcher.clone();
+        let window_weak_clone = window.as_weak();
+        
+        window.global::<MainWindowLogic>().on_start_indexing(move || {
+            let window_weak = window_weak_clone.clone();
+            let searcher = searcher_clone.clone();
+            
+            if let Some(window) = window_weak.upgrade() {
+                window.set_is_indexing(true);
+            }
+
+            thread::spawn(move || {
+                searcher.build_index();
+                
+                slint::invoke_from_event_loop(move || {
+                    if let Some(window) = window_weak.upgrade() {
+                        window.set_is_indexing(false);
+                    }
+                }).unwrap();
+            });
+        });
+
         let searcher_clone = searcher.clone();
         let last_query = last_query.clone();
         let window_weak = window.as_weak();
