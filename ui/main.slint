@@ -8,7 +8,10 @@ import { NotificationStack, NotificationHandler, NotificationData } from "./widg
 export global MainWindowLogic {
     callback settings-changed(string, int);
     callback everysup-changed(string);
+    callback start-indexing();
     callback invoke_search_ready();
+    callback check-for-updates();
+    callback install-update();
 }
 
 export struct FileData {
@@ -59,10 +62,12 @@ component NavButton inherits Rectangle {
 }
 
 export component MainWindow inherits Window {
+    callback set-current-version(string);
+    in-out property <string> current-version: "?.?.?";
     resize-border-width: 10px;
     min-width: 800px;
     min-height: 600px;
-    title: "suptool - v1.0.0";
+    title: "suptool - " + root.current-version;
     icon: @image-url("icons/supv.png");
 
     in-out property <image> window-icon;
@@ -73,6 +78,22 @@ export component MainWindow inherits Window {
     in-out property <[NotificationData]> notifications: [];
 
     in-out property <[[StandardListViewItem]]> everysup-files: [];
+
+    in-out property <bool> is-indexing: false;
+    in-out property <bool> update-available: false;
+    in-out property <float> download-progress: 0.0;
+    in-out property <bool> is-downloading: false;
+
+    callback set-download-progress(float);
+    callback set-is-downloading(bool);
+
+    set-download-progress(value) => {
+        root.download-progress = value;
+    }
+    
+    set-is-downloading(value) => {
+        root.is-downloading = value;
+    }
 
     Rectangle {
         width: parent.width;
@@ -154,11 +175,26 @@ export component MainWindow inherits Window {
                         MainWindowLogic.settings-changed("Option 2 : " + (value ? "activé" : "désactivé"), 2);
                     }
                 }
-                if root.current-page == "about" : AboutPage {}
+                if root.current-page == "about" : AboutPage {
+                    current-version: root.current-version;
+                    download-progress: root.download-progress;
+                    is-downloading: root.is-downloading;
+                    update-available: root.update-available;
+                    check-for-updates => {
+                        MainWindowLogic.check-for-updates();
+                    }
+                    install-update => {
+                        MainWindowLogic.install-update();
+                    }
+                }
                 if root.current-page == "everysup" : EverysupPage {
                     files: root.everysup-files;
+                    is-indexing: root.is-indexing;
                     everysup-changed(value) => {
                         MainWindowLogic.everysup-changed(value);
+                    }
+                    start-indexing => {
+                        MainWindowLogic.start-indexing();
                     }
                 }
             }
