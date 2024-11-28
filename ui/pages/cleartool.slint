@@ -1,0 +1,19 @@
+import { Button } from "std-widgets.slint";
+import { TitleBar } from "../widgets/common.slint";
+export component ClearToolPage inherits Rectangle {
+    background: #3b3737;
+    callback clear-tool-button-clicked();
+    
+    VerticalLayout {
+        TitleBar {
+            self-text: "Clear Tool";
+        }
+        
+        Button {
+            text: "Clear Tool";
+            clicked => {
+                debug("Bouton cliqué!");
+            }
+        }
+    }
+}
