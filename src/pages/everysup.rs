@@ -5,14 +5,7 @@ use std::thread;
 use std::sync::Arc;
 use parking_lot::Mutex;
 use std::time::{Duration, Instant, SystemTime};
-//use std::cmp::Ordering;
-//use std::sync::atomic;
-//use lru::LruCache;
-//use std::num::NonZeroUsize;
-//use std::collections::hash_map::RandomState;
-//use crate::everything::SearchResult;
 use chrono;
-//use rayon::prelude::*;
 
 fn format_size(size: u64) -> String {
     const KB: u64 = 1024;
@@ -30,29 +23,29 @@ fn format_size(size: u64) -> String {
     }
 }
 
-fn init_searcher(window: &Weak<MainWindow>) -> FileSearcher {
+fn init_searcher(window: &Weak<MainWindow>) -> Arc<FileSearcher> {
     println!("=== Initialisation du moteur de recherche ===");
-    let searcher = FileSearcher::new().unwrap();
+    
+    let searcher = Arc::new(FileSearcher::new());
     let searcher_clone = searcher.clone();
     let window_weak = window.clone();
 
     thread::spawn(move || {
         println!("=== Début de l'indexation des fichiers ===");
-        searcher_clone.build_index();
+        (*searcher_clone).build_index();
         println!("=== Fin de l'indexation des fichiers ===");
-        if let Some(window) = window_weak.upgrade() {
-            window.global::<MainWindowLogic>().on_invoke_search_ready(|| {
-                println!("=== Moteur de recherche prêt ===");
-            });
-        }
+        
+        slint::invoke_from_event_loop(move || {
+            if let Some(window) = window_weak.upgrade() {
+                window.global::<MainWindowLogic>().on_invoke_search_ready(|| {
+                    println!("=== Moteur de recherche prêt ===");
+                });
+            }
+        }).unwrap();
     });
 
     searcher
 }
-
-pub const MAX_DISPLAY_RESULTS: usize = 100; // Réduire le nombre de résultats affichés
-// const DEBOUNCE_DELAY: Duration = Duration::from_millis(50); // Réduire le debounce
-
 
 fn format_time(time: SystemTime) -> String {
     let datetime = chrono::DateTime::<chrono::Local>::from(time);
