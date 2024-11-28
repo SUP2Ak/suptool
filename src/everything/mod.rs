@@ -4,4 +4,4 @@ pub(crate) mod search;
 pub(crate) mod watcher;
 
 pub use self::index::EverythingIndex;
-pub use self::search::SearchResult;
+// pub use self::search::SearchResult;

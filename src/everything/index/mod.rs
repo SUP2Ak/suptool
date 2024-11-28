@@ -11,25 +11,25 @@ use std::cmp::Ordering;
 use std::fs::File;
 
 use memmap2::{Mmap, MmapOptions};
-use std::time::SystemTime;
-use rayon::prelude::*;
+// use std::time::SystemTime;
+// use rayon::prelude::*;
 
 pub mod header;
 pub mod entry;
 pub mod block;
 pub mod bitmap;
-use crate::pages::everysup::MAX_DISPLAY_RESULTS;
+// use crate::pages::everysup::MAX_DISPLAY_RESULTS;
 use crate::everything::path::PathTable;
-use crate::everything::search::SearchResult;
-use crate::everything::search::SearchEngine;
+// use crate::everything::search::SearchResult;
+// use crate::everything::search::SearchEngine;
 use crate::everything::index::header::IndexHeader;
 use crate::everything::index::entry::FileEntry;
 use crate::everything::index::block::SearchBlock;
 
-const BLOCK_SIZE: usize = 64 * 1024;    // 64KB par bloc
-const MAX_PATH_LENGTH: usize = 260;     // MAX_PATH Windows
-const INDEX_VERSION: u32 = 1;
-const CACHE_FLUSH_THRESHOLD: usize = 10_000;
+// const BLOCK_SIZE: usize = 64 * 1024;    // 64KB par bloc
+// const MAX_PATH_LENGTH: usize = 260;     // MAX_PATH Windows
+// const INDEX_VERSION: u32 = 1;
+// const CACHE_FLUSH_THRESHOLD: usize = 10_000;
 
 pub struct EverythingIndex {
     pub header: IndexHeader,
