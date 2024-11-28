@@ -1,16 +1,81 @@
 import { TitleBar } from "../widgets/common.slint";
+import { Button, VerticalBox } from "std-widgets.slint";
 
 export component AboutPage inherits Rectangle {
+    in-out property <bool> update-available: false;
+    in property <string> current-version: "?.?.?";
+    in-out property <float> download-progress: 0;
+    in-out property <bool> is-downloading: false;
+    callback check-for-updates();
+    callback install-update();
+    
     background: #3b3737;
     
     VerticalLayout {
+        spacing: 20px;
+        padding: 20px;
+
         TitleBar {
             self-text: "À propos";
         }
     
-        Text {
-            text: "Version 1.0.0";
-            horizontal-alignment: center;
+        VerticalBox {
+            alignment: center;
+            spacing: 10px;
+
+            Text {
+                text: "Version " + current-version;
+                horizontal-alignment: center;
+                color: white;
+                font-size: 16px;
+            }
+
+            if update-available : VerticalBox {
+                Rectangle {
+                    height: 2px;
+                    background: #f39f21;
+                    width: parent.width;
+                }
+
+                Text {
+                    text: "Une mise à jour est disponible !";
+                    color: #f39f21;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                }
+
+                if is-downloading : VerticalBox {
+                    Rectangle {
+                        height: 4px;
+                        width: parent.width;
+                        background: #333;
+                        
+                        Rectangle {
+                            height: parent.height;
+                            width: parent.width * download-progress;
+                            background: #f39f21;
+                            animate width { duration: 200ms; easing: ease; }
+                        }
+                    }
+                    
+                    Text {
+                        text: Math.round(download-progress * 100) + "%";
+                        color: white;
+                        horizontal-alignment: center;
+                    }
+                }
+
+                if !is-downloading : Button {
+                    text: "Télécharger la mise à jour";
+                    clicked => { root.install-update(); }
+                }
+            }
+
+            Button {
+                text: "Vérifier les mises à jour";
+                enabled: !is-downloading;
+                clicked => { root.check-for-updates(); }
+            }
         }
     }
 }
