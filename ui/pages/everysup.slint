@@ -1,23 +1,67 @@
-import { LineEdit, StandardTableView } from "std-widgets.slint";
+import { LineEdit, StandardTableView, Button } from "std-widgets.slint";
 import { TitleBar } from "../widgets/common.slint";
-
+import { PopHover, TooltipPosition } from "../widgets/pop_hover.slint";
 export component EverysupPage inherits Rectangle {
     background: #3b3737;
     in-out property <string> name-of-folder-or-file;
     in-out property <[[StandardListViewItem]]> files: [];
     callback everysup-changed(string);
+    in-out property <bool> is-indexing: false;
+    callback start-indexing();
     
     VerticalLayout {
         TitleBar {
             self-text: "EverySup";
         }
 
-        LineEdit {
-            placeholder-text: "Write name of folder or file";
-            height: 30px;
-            edited => {
-                root.name-of-folder-or-file = self.text;
-                root.everysup-changed(root.name-of-folder-or-file);
+        HorizontalLayout {
+            padding: 3px;
+            spacing: 3px;
+
+            PopHover {
+                text: is-indexing ? "Indexing in progress..." : "Start indexing";
+                position: TooltipPosition.top;
+                width: 30px;
+                height: 30px;
+                
+                Rectangle {
+                    width: 100%;
+                    height: 100%;
+                    background: is-indexing ? #1a1919 : #2c2b2b;
+                    animate background { duration: 250ms; }
+            
+                    Image {
+                        source: @image-url("../icons/playarrow.svg");
+                        width: 16px;
+                        height: 16px;
+                        colorize: is-indexing ? #7a4f11 : #f39f21;
+                        animate colorize { duration: 250ms; }
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+
+                    TouchArea {
+                        enabled: !is-indexing;
+                        clicked => {
+                            root.start-indexing();
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding: 3px;
+            spacing: 3px;
+
+            LineEdit {
+                placeholder-text: "Write name of folder or file";
+                height: 30px;
+                width: 100%;
+                edited => {
+                    root.name-of-folder-or-file = self.text;
+                    root.everysup-changed(root.name-of-folder-or-file);
+                }
             }
         }
 
