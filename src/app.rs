@@ -36,6 +36,8 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     pages::settings::init(&ui.as_weak());
     pages::everysup::init(&ui.as_weak());
     pages::about::init(&ui.as_weak(), updater.into());
+    pages::cleartool::init(&ui.as_weak());
+
     ui.run()?;
     Ok(())
 }
