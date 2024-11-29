@@ -1,20 +1,22 @@
-// // src/utils.rs
-// use std::path::PathBuf;
+use std::path::Path;
 
-// #[cfg(windows)]
-// pub fn get_drives() -> Vec<String> {
-//     let mut drives = Vec::new();
-//     for letter in b'A'..=b'Z' {
-//         let drive = format!("{}:\\", letter as char);
-//         let path = PathBuf::from(&drive);
-//         if path.exists() {
-//             drives.push(drive);
-//         }
-//     }
-//     drives
-// }
+pub fn get_drives() -> Vec<String> {
+    #[cfg(windows)]
+    {
+        (b'A'..=b'Z')
+            .filter_map(|c| {
+                let drive = format!("{}:\\", c as char);
+                Path::new(&drive)
+                    .metadata()
+                    .ok()
+                    .filter(|m| m.is_dir())
+                    .map(|_| drive)
+            })
+            .collect()
+    }
 
-// #[cfg(not(windows))]
-// pub fn get_drives() -> Vec<String> {
-//     vec!["/".to_string()]
-// }
+    #[cfg(not(windows))]
+    {
+        vec!["/".to_string()]
+    }
+}
