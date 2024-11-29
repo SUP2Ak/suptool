@@ -1,0 +1,31 @@
+import { Button, VerticalBox, HorizontalBox, LineEdit } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    in-out property <string> input-text;
+    callback accept(string);
+    callback reject();
+    
+    width: 300px;
+    height: 150px;
+    title: "Nouveau groupe";
+    
+    VerticalBox {
+        LineEdit {
+            placeholder-text: "Nom du groupe";
+            text <=> root.input-text;
+        }
+        HorizontalBox {
+            alignment: end;
+            spacing: 8px;
+            Button {
+                text: "Annuler";
+                clicked => { root.reject(); }
+            }
+            Button {
+                text: "Créer";
+                primary: true;
+                clicked => { root.accept(root.input-text); }
+            }
+        }
+    }
+} 
