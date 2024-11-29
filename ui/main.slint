@@ -1,12 +1,13 @@
-import { Button, VerticalBox } from "std-widgets.slint";
-import { HomePage } from "./pages/home.slint";
-import { SettingsPage } from "./pages/settings.slint";
-import { AboutPage } from "./pages/about.slint";
-import { EverysupPage } from "./pages/everysup.slint";
-import { ClearToolPage } from "./pages/cleartool.slint";
-import { NotificationStack, NotificationHandler, NotificationData } from "./widgets/notifications.slint";
+import { HomePage } from "pages/home.slint";
+import { SettingsPage } from "pages/settings.slint";
+import { AboutPage } from "pages/about.slint";
+import { EverysupPage } from "pages/everysup.slint";
+import { CleanToolPage } from "pages/cleartool.slint";
+import { NotificationStack, NotificationData } from "widgets/notifications.slint";
+import { Button } from "std-widgets.slint";
+import { CleanGroup, DetectedApp } from "common/types.slint";
 
-export global MainWindowLogic {
+export global AppLogic {
     callback settings-changed(string, int);
     callback everysup-changed(string);
     callback start-indexing();
@@ -14,6 +15,17 @@ export global MainWindowLogic {
     callback check-for-updates();
     callback install-update();
     callback clear-tool-button-clicked();
+    callback browse-for-path() -> string;
+    in-out property <[CleanGroup]> cleaning-groups;
+    in-out property <[DetectedApp]> detected-apps;
+    callback add-custom-group(string);
+    callback remove-group(int);
+    callback add-path-to-group(int, string);
+    callback remove-path-from-group(int, int);
+    callback start-cleaning();
+    callback refresh-sizes();
+    callback toggle-group(int, bool);
+    callback toggle-app(int, bool);
 }
 
 export struct FileData {
@@ -21,6 +33,13 @@ export struct FileData {
     path: string,
     size: string,
     modified: string,
+}
+
+export struct DetectedApp {
+    name: string,
+    paths: [string],
+    size: string,
+    cleanable: bool,
 }
 
 component NavButton inherits Rectangle {
@@ -50,7 +69,7 @@ component NavButton inherits Rectangle {
         Text {
             visible: root.drawer-expanded;
             text: root.text;
-            color: selected ? #f39f21 : black;
+            color: selected ? #f39f21 : white;
             font-weight: selected ? 700 : 400;
             vertical-alignment: bottom;
             horizontal-alignment: left;
@@ -69,7 +88,7 @@ export component MainWindow inherits Window {
     resize-border-width: 10px;
     min-width: 800px;
     min-height: 600px;
-    title: "suptool - " + root.current-version;
+    title: "suptool - " + root.current-version + " (alpha)";
     icon: @image-url("icons/supv.png");
 
     in-out property <image> window-icon;
@@ -138,7 +157,7 @@ export component MainWindow inherits Window {
                         }
 
                         NavButton {
-                            text: "Clear Tool";
+                            text: "ClearTool";
                             icon: @image-url("icons/trash.svg");
                             selected: root.current-page == "cleartool";
                             drawer-expanded: root.drawer-expanded;
@@ -179,10 +198,10 @@ export component MainWindow inherits Window {
                 if root.current-page == "home" : HomePage {}
                 if root.current-page == "settings" : SettingsPage {
                     option1-changed(value) => {
-                        MainWindowLogic.settings-changed("Option 1 : " + (value ? "activé" : "désactivé"), 1);
+                        AppLogic.settings-changed("Option 1 : " + (value ? "activé" : "désactivé"), 1);
                     }
                     option2-changed(value) => {
-                        MainWindowLogic.settings-changed("Option 2 : " + (value ? "activé" : "désactivé"), 2);
+                        AppLogic.settings-changed("Option 2 : " + (value ? "activé" : "désactivé"), 2);
                     }
                 }
                 if root.current-page == "about" : AboutPage {
@@ -191,25 +210,48 @@ export component MainWindow inherits Window {
                     is-downloading: root.is-downloading;
                     update-available: root.update-available;
                     check-for-updates => {
-                        MainWindowLogic.check-for-updates();
+                        AppLogic.check-for-updates();
                     }
                     install-update => {
-                        MainWindowLogic.install-update();
+                        AppLogic.install-update();
                     }
                 }
                 if root.current-page == "everysup" : EverysupPage {
                     files: root.everysup-files;
                     is-indexing: root.is-indexing;
                     everysup-changed(value) => {
-                        MainWindowLogic.everysup-changed(value);
+                        AppLogic.everysup-changed(value);
                     }
                     start-indexing => {
-                        MainWindowLogic.start-indexing();
+                        AppLogic.start-indexing();
                     }
                 }
-                if root.current-page == "cleartool" : ClearToolPage {
-                    clear-tool-button-clicked => {
-                        MainWindowLogic.clear-tool-button-clicked();
+                if root.current-page == "cleartool" : CleanToolPage {
+                    cleaning-groups: AppLogic.cleaning-groups;
+                    detected-apps: AppLogic.detected-apps;
+                    toggle-group(index, enabled) => {
+                        AppLogic.toggle-group(index, enabled);
+                    }
+                    add-custom-group(name) => {
+                        AppLogic.add-custom-group(name);
+                    }
+                    remove-group(index) => {
+                        AppLogic.remove-group(index);
+                    }
+                    add-path-to-group(group-index, path) => {
+                        AppLogic.add-path-to-group(group-index, path);
+                    }
+                    remove-path-from-group(group-index, path-index) => {
+                        AppLogic.remove-path-from-group(group-index, path-index);
+                    }
+                    start-cleaning => {
+                        AppLogic.start-cleaning();
+                    }
+                    refresh-sizes => {
+                        AppLogic.refresh-sizes();
+                    }
+                    toggle-app(index, enabled) => {
+                        AppLogic.toggle-app(index, enabled);
                     }
                 }
             }
