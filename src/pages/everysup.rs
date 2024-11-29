@@ -1,11 +1,18 @@
-use slint::{ComponentHandle, Weak};
-use crate::slint_generated::{MainWindow, MainWindowLogic};
+/**
+ * List à faire encore:
+ * - Deplacer la fonction format_size dans un fichier utils
+ * - Clean le code, enlever les println! etc...
+ */
+
+use crate::slint_generated::{MainWindow, AppLogic};
 use crate::pages::features::FileSearcher;
-use std::thread;
-use std::sync::Arc;
+use slint::{ComponentHandle, Weak};
 use parking_lot::Mutex;
-use std::time::{Duration, Instant, SystemTime};
 use chrono;
+use std::time::{Duration, Instant, SystemTime};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::thread;
 
 fn format_size(size: u64) -> String {
     const KB: u64 = 1024;
@@ -23,29 +30,29 @@ fn format_size(size: u64) -> String {
     }
 }
 
-fn init_searcher(window: &Weak<MainWindow>) -> Arc<FileSearcher> {
-    println!("=== Initialisation du moteur de recherche ===");
+// fn init_searcher(window: &Weak<MainWindow>) -> Arc<FileSearcher> {
+//     println!("=== Initialisation du moteur de recherche ===");
     
-    let searcher = Arc::new(FileSearcher::new());
-    let searcher_clone = searcher.clone();
-    let window_weak = window.clone();
+//     let searcher = Arc::new(FileSearcher::new());
+//     let searcher_clone = searcher.clone();
+//     let window_weak = window.clone();
 
-    thread::spawn(move || {
-        println!("=== Début de l'indexation des fichiers ===");
-        (*searcher_clone).build_index();
-        println!("=== Fin de l'indexation des fichiers ===");
+//     thread::spawn(move || {
+//         println!("=== Début de l'indexation des fichiers ===");
+//         (*searcher_clone).build_index();
+//         println!("=== Fin de l'indexation des fichiers ===");
         
-        slint::invoke_from_event_loop(move || {
-            if let Some(window) = window_weak.upgrade() {
-                window.global::<MainWindowLogic>().on_invoke_search_ready(|| {
-                    println!("=== Moteur de recherche prêt ===");
-                });
-            }
-        }).unwrap();
-    });
+//         slint::invoke_from_event_loop(move || {
+//             if let Some(window) = window_weak.upgrade() {
+//                 window.global::<AppLogic>().on_invoke_search_ready(|| {
+//                     println!("=== Moteur de recherche prêt ===");
+//                 });
+//             }
+//         }).unwrap();
+//     });
 
-    searcher
-}
+//     searcher
+// }
 
 fn format_time(time: SystemTime) -> String {
     let datetime = chrono::DateTime::<chrono::Local>::from(time);
@@ -54,23 +61,49 @@ fn format_time(time: SystemTime) -> String {
 
 pub fn init(window: &Weak<MainWindow>) {
     let window_weak = window.clone();
-    let searcher = Arc::new(init_searcher(window));
+    let searcher = Arc::new(FileSearcher::new());
     let last_query = Arc::new(Mutex::new((String::new(), Instant::now())));
+    let is_indexing = Arc::new(AtomicBool::new(false));
     
     if let Some(window) = window_weak.upgrade() {
         let searcher_clone = searcher.clone();
         let window_weak_clone = window.as_weak();
+        let is_indexing_clone = is_indexing.clone();
         
-        window.global::<MainWindowLogic>().on_start_indexing(move || {
+        window.global::<AppLogic>().on_start_indexing(move || {
             let window_weak = window_weak_clone.clone();
             let searcher = searcher_clone.clone();
+            let is_indexing = is_indexing_clone.clone();
             
+            // Si déjà en cours d'indexation, on COUPE TOUT
+            if is_indexing.load(Ordering::SeqCst) {
+                println!("🛑 ARRÊT FORCÉ DE L'INDEXATION");
+                is_indexing.store(false, Ordering::SeqCst);
+                searcher.clear_index();
+                if let Some(window) = window_weak.upgrade() {
+                    window.set_is_indexing(false);
+                }
+                return;
+            }
+            
+            // Nouvelle indexation
+            is_indexing.store(true, Ordering::SeqCst);
             if let Some(window) = window_weak.upgrade() {
                 window.set_is_indexing(true);
             }
 
+            let is_indexing_thread = is_indexing.clone();
             thread::spawn(move || {
-                searcher.build_index();
+                searcher.build_index(move || {
+                    if !is_indexing_thread.load(Ordering::SeqCst) {
+                        println!("⚡ Interruption immédiate de l'indexation");
+                        return true;
+                    }
+                    false
+                });
+                
+                // Reset le flag à la fin quoi qu'il arrive
+                is_indexing.store(false, Ordering::SeqCst);
                 
                 slint::invoke_from_event_loop(move || {
                     if let Some(window) = window_weak.upgrade() {
@@ -84,11 +117,10 @@ pub fn init(window: &Weak<MainWindow>) {
         let last_query = last_query.clone();
         let window_weak = window.as_weak();
         
-        window.global::<MainWindowLogic>().on_everysup_changed(move |value| {
+        window.global::<AppLogic>().on_everysup_changed(move |value| {
             let value_string = value.to_string();
             let now = Instant::now();
             
-            // Vérifier le debounce
             {
                 let (ref last_value, ref last_time) = *last_query.lock();
                 if now.duration_since(*last_time) < Duration::from_millis(20) 
@@ -97,7 +129,6 @@ pub fn init(window: &Weak<MainWindow>) {
                 }
             }
             
-            // Mettre à jour le dernier query
             *last_query.lock() = (value_string.clone(), now);
             
             if value_string.len() < 2 {
