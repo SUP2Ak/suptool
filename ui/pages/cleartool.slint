@@ -1,19 +1,439 @@
-import { Button } from "std-widgets.slint";
-import { TitleBar } from "../widgets/common.slint";
-export component ClearToolPage inherits Rectangle {
-    background: #3b3737;
-    callback clear-tool-button-clicked();
+/**
+ * List à faire encore:
+ * - Gros nettoyage de l'interface, avec les icones etc...
+ * - Voir les commentaires dans le code Rust pour les éléments à faire
+ */
+
+import { Button, GroupBox, ScrollView, LineEdit, VerticalBox, HorizontalBox, StandardListView, CheckBox } from "std-widgets.slint";
+import { AppLogic } from "../logic.slint";
+import { CleanGroup, DetectedApp } from "../common/types.slint";
+
+export global NewGroupPopup {
+    callback show();
+    callback hide();
+    callback accept(string);
+    callback reject();
+    in-out property <bool> visible: false;
+    in-out property <string> input-text;
+}
+
+export component NewGroupWindow inherits Window {
+    callback accept(string);
+    callback reject();
     
-    VerticalLayout {
-        TitleBar {
-            self-text: "Clear Tool";
+    width: 300px;
+    height: 150px;
+    title: "Nouveau groupe";
+    
+    property <string> input-text;
+    
+    VerticalBox {
+        LineEdit {
+            placeholder-text: "Nom du groupe";
+            text <=> root.input-text;
+        }
+        HorizontalBox {
+            alignment: end;
+            spacing: 8px;
+            Button {
+                text: "Annuler";
+                clicked => { root.reject(); }
+            }
+            Button {
+                text: "Créer";
+                primary: true;
+                clicked => { root.accept(root.input-text); }
+            }
+        }
+    }
+}
+
+export component PathDialog inherits Dialog {
+    width: 600px;
+    height: 400px;
+    title: "Ajouter des chemins";
+    
+    callback accept(string);
+    callback reject();
+    callback browse() -> string;
+    
+    property <[string]> selected-paths;
+    
+    VerticalBox {
+        spacing: 8px;
+        padding: 8px;
+        
+        HorizontalBox {
+            spacing: 8px;
+            Button {
+                text: "Parcourir...";
+                clicked => {
+                    selected-paths = [browse()];
+                }
+            }
         }
         
-        Button {
-            text: "Clear Tool";
-            clicked => {
-                debug("Bouton cliqué!");
+        ScrollView {
+            vertical-stretch: 1;
+            VerticalBox {
+                spacing: 4px;
+                for path[i] in selected-paths: HorizontalBox {
+                    Text { 
+                        text: path;
+                        vertical-stretch: 1;
+                    }
+                    Button {
+                        text: "🗑️";
+                        clicked => {
+                            selected-paths = [];
+                        }
+                    }
+                }
             }
+        }
+        
+        HorizontalBox {
+            alignment: end;
+            spacing: 8px;
+            Button {
+                text: "Annuler";
+                clicked => { reject(); }
+            }
+            Button {
+                text: "Ajouter";
+                primary: true;
+                clicked => {
+                    accept(selected-paths[0]);
+                }
+            }
+        }
+    }
+}
+
+export component GroupItem inherits Rectangle {
+    in property <string> name;
+    in property <string> size;
+    in property <bool> enabled;
+    in property <[string]> paths;
+    in property <int> index;
+    in-out property <bool> expanded: false;
+    
+    callback toggle-group(int, bool);
+    callback remove-group(int);
+    callback remove-path-from-group(int, int);
+    callback open-path-dialog(int);
+    
+    background: #2a2a2a;
+    border-radius: 4px;
+    padding: 8px;
+    
+    VerticalBox {
+        spacing: 4px;
+        HorizontalBox {
+            spacing: 8px;
+            CheckBox {
+                text: root.name;
+                checked: root.enabled;
+                toggled => { root.toggle-group(root.index, self.checked); }
+            }
+            
+            HorizontalLayout {
+                alignment: end;
+                spacing: 8px;
+                Text {
+                    text: root.size;
+                    vertical-alignment: center;
+                }
+                Button {
+                    text: root.expanded ? "▼" : "▶";
+                    width: 30px;
+                    height: 30px;
+                    clicked => { root.expanded = !root.expanded; }
+                }
+                Button {
+                    text: "❌";
+                    width: 30px;
+                    height: 30px;
+                    clicked => { root.remove-group(root.index); }
+                }
+            }
+        }
+        
+        if root.expanded : VerticalBox {
+            padding-left: 24px;
+            spacing: 8px;
+            
+            for path[j] in root.paths: HorizontalBox {
+                spacing: 8px;
+                Text { 
+                    text: path;
+                    vertical-stretch: 1;
+                }
+                Button {
+                    text: "🗑️";
+                    width: 30px;
+                    height: 30px;
+                    clicked => { root.remove-path-from-group(root.index, j); }
+                }
+            }
+            
+            Button {
+                text: "+ Ajouter un chemin";
+                clicked => { root.open-path-dialog(root.index); }
+            }
+        }
+    }
+}
+
+export component CleaningGroupView inherits Rectangle {
+    in property <string> title;
+    in property <string> size;
+    in property <bool> enabled;
+    in property <[string]> paths;
+    callback toggle-enabled(bool);
+    callback remove-group(int);
+    callback remove-path-from-group(int, int);
+    callback open-path-dialog(int);
+    
+    VerticalBox {
+        HorizontalBox {
+            spacing: 8px;
+            CheckBox {
+                text: root.title;
+                checked: root.enabled;
+                toggled => { root.toggle-enabled(self.checked); }
+            }
+            Text { text: root.size; }
+            HorizontalLayout {
+                alignment: end;
+                spacing: 8px;
+                Button {
+                    text: "➕";
+                    clicked => { root.open-path-dialog(0); }
+                }
+                Button {
+                    text: "❌";
+                    clicked => { root.remove-group(0); }
+                }
+            }
+        }
+        
+        if root.paths.length > 0: Rectangle {
+            background: #ffffff0f;
+            VerticalBox {
+                padding: 8px;
+                spacing: 4px;
+                for path[index] in root.paths: HorizontalBox {
+                    Text { text: path; }
+                    HorizontalLayout {
+                        alignment: end;
+                        Button {
+                            text: "❌";
+                            clicked => { root.remove-path-from-group(0, index); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component DetectedAppItem inherits Rectangle {
+    in property <string> name;
+    in property <string> size;
+    in property <bool> enabled;
+    in property <[string]> paths;
+    in property <int> index;
+    in-out property <bool> expanded: false;
+    
+    callback toggle-enabled(int, bool);
+    
+    background: #2a2a2a;
+    border-radius: 4px;
+    padding: 8px;
+    
+    VerticalBox {
+        spacing: 4px;
+        HorizontalBox {
+            spacing: 8px;
+            CheckBox {
+                text: root.name;
+                checked: root.enabled;
+                toggled => { root.toggle-enabled(root.index, self.checked); }
+            }
+            
+            HorizontalLayout {
+                alignment: end;
+                spacing: 8px;
+                Text {
+                    text: root.size;
+                    vertical-alignment: center;
+                }
+                Button {
+                    text: root.expanded ? "▼" : "▶";
+                    width: 30px;
+                    height: 30px;
+                    clicked => { root.expanded = !root.expanded; }
+                }
+            }
+        }
+        
+        if root.expanded : ScrollView {
+            vertical-stretch: 1;
+            max-height: 200px;
+            VerticalBox {
+                padding-left: 24px;
+                spacing: 8px;
+                
+                for path in root.paths: Text { 
+                    text: path;
+                    wrap: word-wrap;
+                }
+            }
+        }
+    }
+}
+
+export component CleanToolPage inherits Rectangle {
+    // Propriétés
+    in-out property <[CleanGroup]> cleaning-groups;
+    in-out property <[DetectedApp]> detected-apps;
+    in-out property <bool> show-new-group-dialog: false;
+    in-out property <bool> show-path-dialog: false;
+    in-out property <int> current-group-index: 0;
+    in-out property <int> selected-group-index: -1;
+
+    // Callbacks
+    callback refresh-sizes();
+    callback start-cleaning();
+    callback add-custom-group(string);
+    callback remove-group(int);
+    callback add-path-to-group(int, string);
+    callback remove-path-from-group(int, int);
+    callback open-path-dialog(int);
+    callback toggle-group(int, bool);
+    callback toggle-app(int, bool);
+
+    // Fonction pour gérer l'ajout de chemin
+    public function handle-path-selected(path: string) {
+        if (path != "") {
+            root.add-path-to-group(root.current-group-index, path);
+        }
+    }
+
+    // Dialogs
+    NewGroupWindow {
+        visible: root.show-new-group-dialog;
+        accept(name) => {
+            root.add-custom-group(name);
+            root.show-new-group-dialog = false;
+        }
+        reject => {
+            root.show-new-group-dialog = false;
+        }
+    }
+    
+    PathDialog {
+        visible: root.show-path-dialog;
+        accept(path) => {
+            if (root.selected-group-index >= 0) {
+                root.add-path-to-group(root.selected-group-index, path);
+            }
+            root.show-path-dialog = false;
+        }
+        reject => {
+            root.show-path-dialog = false;
+        }
+        browse => {
+            AppLogic.browse-for-path()
+        }
+    }
+
+    VerticalBox {
+        spacing: 16px;
+        padding: 16px;
+        
+        // En-tête avec le total
+        HorizontalBox {
+            spacing: 8px;
+            Text {
+                text: "Espace total à libérer : ";
+                vertical-alignment: center;
+            }
+            Text {
+                text: "Calcul en cours...";
+                vertical-alignment: center;
+            }
+            Button {
+                text: "🔄 Rafraîchir";
+                clicked => { root.refresh-sizes(); }
+            }
+        }
+        
+        // Contenu principal avec défilement
+        GroupBox {
+            title: "Groupes de nettoyage";
+            vertical-stretch: 7;
+            
+            VerticalBox {
+                ScrollView {
+                    vertical-stretch: 1;
+                    VerticalBox {
+                        spacing: 8px;
+                        for group[i] in root.cleaning-groups: CleaningGroupView {
+                            title: group.name;
+                            size: group.size;
+                            enabled: group.enabled;
+                            paths: group.paths;
+                            toggle-enabled(enabled) => {
+                                root.toggle-group(i, enabled);
+                            }
+                            remove-group(index) => {
+                                root.remove-group(index);
+                            }
+                            remove-path-from-group(group-index, path-index) => {
+                                root.remove-path-from-group(group-index, path-index);
+                            }
+                            open-path-dialog(index) => {
+                                root.selected-group-index = index;
+                                root.show-path-dialog = true;
+                            }
+                        }
+                        
+                        Button {
+                            text: "➕ Nouveau groupe";
+                            clicked => { root.show-new-group-dialog = true; }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Applications détectées en bas
+        GroupBox {
+            title: "Applications détectées";
+            vertical-stretch: 3;
+            
+            VerticalBox {
+                spacing: 8px;
+                for app[i] in root.detected-apps: DetectedAppItem {
+                    name: app.name;
+                    size: app.size;
+                    enabled: app.cleanable;
+                    paths: app.paths;
+                    index: i;
+                    toggle-enabled(index, enabled) => {
+                        root.toggle-app(index, enabled);
+                    }
+                }
+            }
+        }
+        
+        // Bouton de nettoyage en bas
+        Button {
+            text: "🧹 Lancer le nettoyage";
+            primary: true;
+            clicked => { root.start-cleaning(); }
         }
     }
 }
