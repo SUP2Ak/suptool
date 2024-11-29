@@ -28,5 +28,7 @@ windows = { version = "0.52", features = [
 ] }
 semver = "1.0"
 ureq = { version = "2.8.0", features = ["json"] }
+crossbeam = "0.8.1"
+rfd = "0.11"
 [build-dependencies]
 slint-build = "1.8.0"
