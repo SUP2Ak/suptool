@@ -1,0 +1,21 @@
+import { CleanGroup, DetectedApp } from "./common/types.slint";
+
+export global AppLogic {
+    callback settings-changed(string, int);
+    callback everysup-changed(string);
+    callback start-indexing();
+    callback invoke_search_ready();
+    callback check-for-updates();
+    callback install-update();
+    callback clear-tool-button-clicked();
+    callback browse-for-path() -> string;
+    in-out property <[CleanGroup]> cleaning-groups;
+    in-out property <[DetectedApp]> detected-apps;
+    callback add-custom-group(string);
+    callback remove-group(int);
+    callback add-path-to-group(int, string);
+    callback remove-path-from-group(int, int);
+    callback start-cleaning();
+    callback refresh-sizes();
+    callback toggle-group(int, bool);
+} 
