@@ -6,6 +6,7 @@
 
 use crate::slint_generated::{MainWindow, AppLogic};
 use crate::pages::features::FileSearcher;
+use crate::utils::format_size;
 use slint::{ComponentHandle, Weak};
 use parking_lot::Mutex;
 use chrono;
@@ -14,21 +15,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 
-fn format_size(size: u64) -> String {
-    const KB: u64 = 1024;
-    const MB: u64 = KB * 1024;
-    const GB: u64 = MB * 1024;
-
-    if size >= GB {
-        format!("{:.1} GB", size as f64 / GB as f64)
-    } else if size >= MB {
-        format!("{:.1} MB", size as f64 / MB as f64)
-    } else if size >= KB {
-        format!("{:.1} KB", size as f64 / KB as f64)
-    } else {
-        format!("{} B", size)
-    }
-}
 
 // fn init_searcher(window: &Weak<MainWindow>) -> Arc<FileSearcher> {
 //     println!("=== Initialisation du moteur de recherche ===");
@@ -123,7 +109,7 @@ pub fn init(window: &Weak<MainWindow>) {
             
             {
                 let (ref last_value, ref last_time) = *last_query.lock();
-                if now.duration_since(*last_time) < Duration::from_millis(20) 
+                if now.duration_since(*last_time) < Duration::from_millis(1) 
                    || value_string == *last_value {
                     return;
                 }
@@ -152,7 +138,7 @@ pub fn init(window: &Weak<MainWindow>) {
                                 let row = vec![
                                     result.name,
                                     result.path,
-                                    format_size(result.size),
+                                    format_size(result.size).to_string(),
                                     if result.is_dir { "Folder".into() } else { "File".into() },
                                     format_time(result.modified),
                                 ];
