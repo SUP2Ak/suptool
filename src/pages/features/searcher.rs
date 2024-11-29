@@ -5,16 +5,15 @@
  * - filtre de recherche etc..., icon, ouverture a la racine du path..
  */
 
+use crate::utils::get_drives;
 use serde::{Serialize, Deserialize};
 use rayon::prelude::*;
 use dashmap::DashMap;
 use ignore::WalkBuilder;
 use num_cpus;
 use once_cell::sync::Lazy;
-use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Instant;
-use std::path::Path;
 use std::time::SystemTime;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -28,8 +27,9 @@ pub struct SearchResult {
     pub modified: SystemTime,
 }
 
-static FILES: Lazy<DashMap<u64, SearchResult>> = Lazy::new(|| DashMap::with_capacity(2_500_000));
-static WORDS: Lazy<DashMap<String, Vec<u64>>> = Lazy::new(|| DashMap::with_capacity(100_000));
+static FILES: Lazy<DashMap<u64, SearchResult>> = Lazy::new(|| DashMap::with_capacity(500_000));
+static NAME_INDEX: Lazy<DashMap<String, Vec<u64>>> = Lazy::new(|| DashMap::with_capacity(25_000));
+static PATH_INDEX: Lazy<DashMap<String, Vec<u64>>> = Lazy::new(|| DashMap::with_capacity(25_000));
 static FILE_COUNT: AtomicU64 = AtomicU64::new(0);
 static NEXT_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -42,7 +42,8 @@ impl FileSearcher {
 
     pub fn clear_index(&self) {
         FILES.clear();
-        WORDS.clear();
+        NAME_INDEX.clear();
+        PATH_INDEX.clear();
         FILE_COUNT.store(0, Ordering::Relaxed);
         NEXT_ID.store(0, Ordering::Relaxed);
         println!("🧹 Index vidé");
@@ -55,7 +56,7 @@ impl FileSearcher {
         let start_time = Instant::now();
         println!("🔄 Démarrage de l'indexation...");
 
-        let drives = Self::get_drives();
+        let drives = get_drives();
         println!("💾 Disques détectés: {:?}", drives);
 
         let should_cancel = Arc::new(should_cancel);
@@ -97,16 +98,38 @@ impl FileSearcher {
                             }
 
                             let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
-                            let name = entry.file_name().to_string_lossy().into_owned();
+                            let name = entry.file_name().to_string_lossy();
+                            let path = entry.path().to_string_lossy();
 
                             FILES.insert(id, SearchResult {
                                 id,
-                                name,
-                                path: entry.path().to_string_lossy().into_owned(),
+                                name: name.to_string(),
+                                path: path.to_string(),
                                 size: metadata.len(),
                                 is_dir: metadata.is_dir(),
                                 modified: metadata.modified().unwrap_or(SystemTime::now()),
                             });
+
+                            let name_lower = name.to_lowercase();
+                            for word in name_lower
+                                .split(|c: char| !c.is_alphanumeric())
+                                .filter(|s| !s.is_empty() && s.len() > 2) {
+                                
+                                NAME_INDEX.entry(word.to_string())
+                                    .or_insert_with(|| Vec::with_capacity(50))
+                                    .push(id);
+                            }
+
+                            if let Some(parent) = entry.path().parent() {
+                                let last_segment = parent.file_name()
+                                    .map(|s| s.to_string_lossy().to_lowercase());
+                                
+                                if let Some(segment) = last_segment {
+                                    PATH_INDEX.entry(segment.to_string())
+                                        .or_insert_with(|| Vec::with_capacity(50))
+                                        .push(id);
+                                }
+                            }
 
                             // Vérifier APRÈS chaque insertion
                             if (should_cancel)() {
@@ -134,65 +157,34 @@ impl FileSearcher {
     }
 
     pub fn search(&self, query: &str) -> Vec<SearchResult> {
-        let words: Vec<String> = query.to_lowercase()
-            .split_whitespace()
-            .map(|s| s.to_string())
+        let query = query.to_lowercase();
+        
+        // Recherche dans l'index des noms (plus rapide)
+        let name_matches: Vec<u64> = NAME_INDEX.iter()
+            .filter(|entry| entry.key().contains(&query))
+            .flat_map(|entry| entry.value().clone())
+            .take(1000)
             .collect();
 
-        if words.is_empty() {
-            return Vec::new();
-        }
-
-        let mut matches = HashSet::new();
-        let mut first = true;
-
-        for word in &words {
-            if let Some(ids) = WORDS.get(word) {
-                if first {
-                    matches.extend(ids.value());
-                    first = false;
-                } else {
-                    matches.retain(|id| ids.value().contains(id));
-                }
-            } else if first {
-                return Vec::new();
-            }
-        }
-
-        // Convertir les IDs en résultats
-        let mut results: Vec<_> = matches.iter()
-            .filter_map(|id| FILES.get(id))
-            .map(|r| r.value().clone())
-            .collect();
-
-        // Trier par date de modification
-        results.sort_unstable_by(|a, b| b.modified.cmp(&a.modified));
-
-        results
-    }
-
-    fn get_drives() -> Vec<String> {
-        #[cfg(windows)]
-        {
-            (b'C'..=b'Z')  
-                .filter_map(|c| {
-                    let drive = format!("{}:\\", c as char);
-                    if Path::new(&drive).exists() {
-                        let path = Path::new(&drive);
-                        if let Ok(metadata) = path.metadata() {
-                            if metadata.is_dir() {
-                                return Some(drive);
-                            }
-                        }
-                    }
-                    None
-                })
+        // Si pas assez de résultats, chercher dans les chemins
+        let path_matches: Vec<u64> = if name_matches.len() < 1000 {
+            PATH_INDEX.iter()
+                .filter(|entry| entry.key().contains(&query))
+                .flat_map(|entry| entry.value().clone())
+                .take(1000 - name_matches.len())
                 .collect()
-        }
+        } else {
+            Vec::new()
+        };
 
-        #[cfg(not(windows))]
-        {
-            vec!["/".to_string()]
-        }
+        // Combiner et convertir les résultats
+        let mut results: Vec<SearchResult> = name_matches.into_iter()
+            .chain(path_matches)
+            .filter_map(|id| FILES.get(&id))
+            .map(|entry| entry.value().clone())
+            .collect();
+
+        results.truncate(100);
+        results
     }
 }
