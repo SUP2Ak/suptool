@@ -6,44 +6,13 @@
 
 use crate::slint_generated::{MainWindow, AppLogic};
 use crate::pages::features::FileSearcher;
-use crate::utils::format_size;
+use crate::utils::{format_size, format_time};
 use slint::{ComponentHandle, Weak};
 use parking_lot::Mutex;
-use chrono;
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
-
-
-// fn init_searcher(window: &Weak<MainWindow>) -> Arc<FileSearcher> {
-//     println!("=== Initialisation du moteur de recherche ===");
-    
-//     let searcher = Arc::new(FileSearcher::new());
-//     let searcher_clone = searcher.clone();
-//     let window_weak = window.clone();
-
-//     thread::spawn(move || {
-//         println!("=== Début de l'indexation des fichiers ===");
-//         (*searcher_clone).build_index();
-//         println!("=== Fin de l'indexation des fichiers ===");
-        
-//         slint::invoke_from_event_loop(move || {
-//             if let Some(window) = window_weak.upgrade() {
-//                 window.global::<AppLogic>().on_invoke_search_ready(|| {
-//                     println!("=== Moteur de recherche prêt ===");
-//                 });
-//             }
-//         }).unwrap();
-//     });
-
-//     searcher
-// }
-
-fn format_time(time: SystemTime) -> String {
-    let datetime = chrono::DateTime::<chrono::Local>::from(time);
-    datetime.format("%Y-%m-%d %H:%M").to_string()
-}
 
 pub fn init(window: &Weak<MainWindow>) {
     let window_weak = window.clone();
