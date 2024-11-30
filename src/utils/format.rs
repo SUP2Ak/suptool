@@ -1,4 +1,6 @@
 use slint::SharedString;
+use chrono::DateTime;
+use std::time::SystemTime;
 
 pub fn format_size(size: u64) -> SharedString {
     const KB: f64 = 1024.0;
@@ -17,4 +19,9 @@ pub fn format_size(size: u64) -> SharedString {
     };
 
     SharedString::from(formatted)
+}
+
+pub fn format_time(time: SystemTime) -> String {
+    let datetime = DateTime::<chrono::Local>::from(time);
+    datetime.format("%Y-%m-%d %H:%M").to_string()
 }
