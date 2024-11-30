@@ -3,6 +3,7 @@
 /target/
 /installer/main.iss
 /installer/installer/
+/installer/cerf/
 
 # Alternative VCS systems
 /.jj/
