@@ -1,5 +1,7 @@
 # suptool
 
+![GitHub all releases](https://img.shields.io/github/downloads/SUP2Ak/suptool/total?color=%2329c785&style=for-the-badge) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/SUP2Ak/suptool?color=%2329c785&style=for-the-badge) ![OS](https://img.shields.io/badge/OS-Windows-blue?style=for-the-badge) ![build](https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge) ![Alpha](https://img.shields.io/badge/status-Alpha-red?style=for-the-badge)
+
 suptool est un utilitaire Windows qui offre plusieurs fonctionnalités pour améliorer votre productivité.
 
 ## Fonctionnalités
